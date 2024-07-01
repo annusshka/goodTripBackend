@@ -1,13 +1,13 @@
 package com.example.goodTripBackend.repository;
 
-import com.example.goodTripBackend.models.entities.User;
+import com.example.goodTripBackend.models.entities.TourKind;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface TourKindRepository extends JpaRepository<TourKind, Long> {
 
-    Optional<User> findByEmail(String email);
+    Optional<TourKind> findByKind(String kind);
 }

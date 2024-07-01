@@ -1,4 +1,4 @@
-package com.example.goodTripBackend.entities;
+package com.example.goodTripBackend.models.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +9,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "user_")
+@Table(name = "_user")
 public class User implements UserDetails {
 
     @Id
@@ -35,25 +34,31 @@ public class User implements UserDetails {
     @Column(name = "email")
     private String email;
 
+    @Column
+    private String phone;
+
     @Column(name = "password")
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(
-            name = "like_list",
+            name = "liked_tour",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "tour_id"))
     private List<Tour> likes;
 
-    @ManyToMany
-    @JoinTable(
-            name = "tour_list",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "tour_id"))
-    private List<Tour> uploadedTours;
+//    @ManyToMany(cascade = CascadeType.ALL)
+//    @JoinTable(
+//            name = "created_tour",
+//            joinColumns = @JoinColumn(name = "user_id"),
+//            inverseJoinColumns = @JoinColumn(name = "tour_id", updatable = true))
+//    private List<Tour> createdTours;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<Tour> createdTours;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
