@@ -2,9 +2,12 @@ package com.example.goodTripBackend.controller;
 
 import com.example.goodTripBackend.models.dto.AccountDto;
 import com.example.goodTripBackend.models.dto.AudioTourDto;
-import com.example.goodTripBackend.models.entities.User;
 import com.example.goodTripBackend.service.AudioTourService;
 import com.example.goodTripBackend.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +17,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/auth/admin")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Admin")
 public class AdminController {
 
     private final UserService userService;
@@ -21,6 +26,20 @@ public class AdminController {
     private final AudioTourService audioTourService;
 
     @GetMapping("/users")
+    @Operation(
+            description = "Get all users",
+            summary = "This is summary for get all users request",
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200"
+                    ),
+                    @ApiResponse(
+                            description = "Unauthorized / Invalid Token",
+                            responseCode = "403"
+                    )
+            }
+    )
     public ResponseEntity<List<AccountDto>> findAllUsers(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit", defaultValue = "100") int limit
