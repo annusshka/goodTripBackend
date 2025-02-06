@@ -1,11 +1,30 @@
 version: '3.8'
 
-#services:
-#  postgres:
-#    image: 'postgres:latest'
-#    environment:
-#      - 'POSTGRES_DB=trip_db'
-#      - 'POSTGRES_PASSWORD=1234'
-#      - 'POSTGRES_USER=localguide'
-#    ports:
-#      - '5432:5432'
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=trip_db'
+      - 'PGDATA=/var/lib/postgresql/data'
+      - 'POSTGRES_PASSWORD=1234'
+      - 'POSTGRES_USER=localguide'
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - '5432:5432'
+    networks:
+      - good-trip
+  mail-dev:
+    container_name: mail-dev-bsn
+    image: maildev/maildev
+    ports:
+      - 1080:1080
+      - 1025:1025
+
+networks:
+  good-trip:
+    driver: bridge
+
+volumes:
+  postgres:
+    driver: local

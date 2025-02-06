@@ -1,6 +1,6 @@
 package com.example.goodTripBackend.config;
 
-import com.example.goodTripBackend.repository.UserRepository;
+import com.example.goodTripBackend.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
