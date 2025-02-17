@@ -1,4 +1,4 @@
-package com.example.goodTripBackend.domain;
+package com.example.goodTripBackend.domain.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

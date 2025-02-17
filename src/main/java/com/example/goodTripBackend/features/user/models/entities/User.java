@@ -1,6 +1,7 @@
 package com.example.goodTripBackend.features.user.models.entities;
 
 import com.example.goodTripBackend.features.tour.models.entities.Tour;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +31,7 @@ public class User implements UserDetails, Principal {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "user_id", nullable = false)
+    @Column(nullable = false)
     private Long id;
 
     @Column(name = "name")
@@ -48,7 +49,11 @@ public class User implements UserDetails, Principal {
     @Column(name = "password")
     private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<UserRole> roles;
 
     @CreatedDate
@@ -64,17 +69,22 @@ public class User implements UserDetails, Principal {
             name = "liked_tour",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "tour_id"))
+    @JsonIgnore
     private List<Tour> likes;
 
     @OneToMany(fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Tour> createdTours;
+
+    private boolean accountLocked;
+    private boolean enabled;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
 //        return List.of(new SimpleGrantedAuthority(role.name()));
         return this.roles
                 .stream()
-                .map(r ->new SimpleGrantedAuthority(r.getRole()))
+                .map(r -> new SimpleGrantedAuthority(r.getRole()))
                 .collect(Collectors.toList());
     }
 
@@ -95,7 +105,7 @@ public class User implements UserDetails, Principal {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !accountLocked;
     }
 
     @Override
@@ -105,7 +115,7 @@ public class User implements UserDetails, Principal {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 
     public String fullName() {

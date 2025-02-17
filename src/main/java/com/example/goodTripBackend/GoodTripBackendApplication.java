@@ -1,7 +1,7 @@
 package com.example.goodTripBackend;
 
-import com.example.goodTripBackend.features.auth.repository.RoleRepository;
 import com.example.goodTripBackend.features.user.models.entities.UserRole;
+import com.example.goodTripBackend.features.user.repository.RoleRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

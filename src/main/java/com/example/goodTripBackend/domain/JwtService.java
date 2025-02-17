@@ -1,4 +1,4 @@
-package com.example.goodTripBackend.config;
+package com.example.goodTripBackend.domain;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -41,13 +41,6 @@ public class JwtService {
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
-//        return Jwts
-//                .builder()
-//                .claims(extraClaims)
-//                .subject(userDetails.getUsername())
-//                .issuedAt(new Date(System.currentTimeMillis()))
-//                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
-//                .signWith(getSigningKey()).compact();
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 

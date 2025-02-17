@@ -5,9 +5,9 @@ import com.example.goodTripBackend.features.auth.models.dto.AuthenticationRespon
 import com.example.goodTripBackend.features.auth.models.dto.RegisterRequest;
 import com.example.goodTripBackend.features.auth.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,15 +24,24 @@ public class AuthenticationController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ResponseEntity<AuthenticationResponse> register(
             @RequestBody @Valid RegisterRequest request
-    ) throws MessagingException {
-        service.register(request);
-        return ResponseEntity.accepted().build();
-//        return ResponseEntity.ok(service.register(request));
+    ) {
+        try {
+            service.register(request);
+            return ResponseEntity.accepted().build();
+        }
+        catch (DataIntegrityViolationException e) {
+            return ResponseEntity.unprocessableEntity().build();
+        }
+        catch (IllegalStateException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping("/authentication")
     public ResponseEntity<AuthenticationResponse> authentication(
-            @RequestBody AuthenticationRequest request
+            @RequestBody @Valid AuthenticationRequest request
     ) {
         return ResponseEntity.ok(service.authentication(request));
     }

@@ -36,5 +36,9 @@ application:
   mailing:
     frontend:
       activation-url: http://localhost:4200/activate-account
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  default-produces-media-type: application/json
 server:
   port: 8088

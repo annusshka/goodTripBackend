@@ -1,35 +1,36 @@
 package com.example.goodTripBackend.features.auth.service;
 
-import com.example.goodTripBackend.config.JwtService;
+import com.example.goodTripBackend.domain.JwtService;
 import com.example.goodTripBackend.features.auth.models.dto.AuthenticationRequest;
 import com.example.goodTripBackend.features.auth.models.dto.AuthenticationResponse;
 import com.example.goodTripBackend.features.auth.models.dto.RegisterRequest;
 import com.example.goodTripBackend.features.auth.models.entities.EmailTemplateName;
-import com.example.goodTripBackend.features.user.models.entities.Role;
 import com.example.goodTripBackend.features.auth.models.entities.Token;
+import com.example.goodTripBackend.features.user.models.entities.Role;
 import com.example.goodTripBackend.features.user.models.entities.User;
-import com.example.goodTripBackend.features.auth.repository.RoleRepository;
 import com.example.goodTripBackend.features.auth.repository.TokenRepository;
 import com.example.goodTripBackend.features.user.repository.UserRepository;
+import com.example.goodTripBackend.features.user.service.RoleService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-    private final RoleRepository roleRepository;
-    private final UserRepository repository;
+    private final RoleService roleService;
+    private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
@@ -39,19 +40,20 @@ public class AuthenticationService {
     @Value("${application.mailing.frontend.activation-url}")
     private String activationUrl;
 
+    @Transactional
     public void register(RegisterRequest request) throws MessagingException {
-        var userRole = roleRepository.findByRole("USER")
-                // todo - better exception handling
-                .orElseThrow(() -> new IllegalStateException("USER role not found"));
+        var userRole = roleService.getRole(Role.USER.name());
         var user = User.builder()
                 .name(request.getName())
                 .surname(request.getSurname())
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .accountLocked(false)
+                .enabled(true)
                 .roles(List.of(userRole))
                 .build();
-        repository.save(user);
+        userRepository.save(user);
         sendValidationEmail(user);
         var jwtToken = jwtService.generateToken(user);
         var jwtRefreshToken = jwtService.generateToken(user);
@@ -89,7 +91,7 @@ public class AuthenticationService {
         return generatedToken;
     }
 
-    private String generateActivationCode(int length) {
+    private String generateActivationCode(final int length) {
         String characters = "0123456789";
         StringBuilder codeBuilder = new StringBuilder();
         SecureRandom random = new SecureRandom();
@@ -101,30 +103,48 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authentication(AuthenticationRequest request) {
-        try {
-            authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
-        } catch (AuthenticationException e) {
-            var user = repository.findByEmail(request.getEmail());
-            if (user.isPresent()) {
-                var jwtToken = jwtService.generateToken(user.get());
-                var jwtRefreshToken = jwtService.generateToken(user.get());
-                return AuthenticationResponse.builder()
-                        .token(jwtToken)
-                        .refreshToken(jwtRefreshToken)
-                        .user(user.get())
-                        .build();
-            } else {
-                throw new RuntimeException(e);
-            }
-        }
-        var user = repository.findByEmail(request.getEmail())
-                .orElseThrow();
-        var jwtToken = jwtService.generateToken(user);
+//        try {
+//            authManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(
+//                            request.getEmail(),
+//                            request.getPassword()
+//                    )
+//            );
+//        } catch (AuthenticationException e) {
+//            var user = userRepository.findByEmail(request.getEmail());
+//            if (user.isPresent()) {
+//                var jwtToken = jwtService.generateToken(user.get());
+//                var jwtRefreshToken = jwtService.generateToken(user.get());
+//                return AuthenticationResponse.builder()
+//                        .token(jwtToken)
+//                        .refreshToken(jwtRefreshToken)
+//                        .user(user.get())
+//                        .build();
+//            } else {
+//                throw new RuntimeException(e);
+//            }
+//        }
+//        var user = userRepository.findByEmail(request.getEmail())
+//                .orElseThrow();
+//        var jwtToken = jwtService.generateToken(user);
+//        var jwtRefreshToken = jwtService.generateToken(user);
+//        return AuthenticationResponse.builder()
+//                .token(jwtToken)
+//                .refreshToken(jwtRefreshToken)
+//                .user(user)
+//                .build();
+        var auth = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+        var claims = new HashMap<String, Object>();
+        var user = ((User) auth.getPrincipal());
+        claims.put("fullName", user.fullName());
+
+        var jwtToken = jwtService.generateToken(claims, (User) auth.getPrincipal());
         var jwtRefreshToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)

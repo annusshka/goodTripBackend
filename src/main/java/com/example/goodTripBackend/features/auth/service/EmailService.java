@@ -20,10 +20,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender emailSender;
+    private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
 
-    //something to be added
     @Async
     public void sendEmail(
             String to,
@@ -40,14 +39,14 @@ public class EmailService {
             templateName = emailTemplateName.name();
         }
 
-        MimeMessage mimeMessage = emailSender.createMimeMessage();
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(
                 mimeMessage,
                 MimeMessageHelper.MULTIPART_MODE_MIXED,
                 UTF_8.name()
         );
         Map<String, Object> properties = new HashMap<>();
-        properties.put("username", true);
+        properties.put("username", userName);
         properties.put("confirmationUrl", confirmationUrl);
         properties.put("activationCode", activationCode);
 
@@ -55,13 +54,13 @@ public class EmailService {
         context.setVariables(properties);
 
         // todo -> set an email
-        mimeMessageHelper.setFrom("contact@example.com");
+        mimeMessageHelper.setFrom("contact@unknownplace.com");
         mimeMessageHelper.setTo(to);
         mimeMessageHelper.setSubject(subject);
 
         String template = templateEngine.process(templateName, context);
         mimeMessageHelper.setText(template, true);
 
-        emailSender.send(mimeMessage);
+        mailSender.send(mimeMessage);
     }
 }
