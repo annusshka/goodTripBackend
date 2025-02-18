@@ -21,4 +21,4 @@ COPY pom.xml .
 
 #RUN gradle installDist
 
-#CMD ./build/install/goodTripBackend/bin/goodTripBackend
+CMD ./build/install/goodTripBackend/bin/goodTripBackend
