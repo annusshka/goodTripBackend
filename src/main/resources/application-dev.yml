@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/trip_db
+    url: jdbc:postgresql://postgres-sql-gtb:5432/trip_db
     username: localguide
     password: "1234"
   jpa:
