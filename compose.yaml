@@ -21,15 +21,15 @@ services:
     ports:
       - 1080:1080
       - 1025:1025
-#  gtb-api:
-#    container_name: gtb-api
-#    image: gtb/gtb:1.0.0
-#    ports:
-#      - 8088:8088
-#    networks:
-#      - good-trip
-#    depends_on:
-#      - postgresql
+  gtb-api:
+    container_name: gtb-api
+    image: gtb/gtb:1.0.0
+    ports:
+      - 8088:8088
+    networks:
+      - good-trip
+    depends_on:
+      - postgres
 networks:
   good-trip:
     driver: bridge
