@@ -29,12 +29,7 @@ public class GoodTripBackendApplication {
         }
         imageKit.setConfig(config);
 
-        String port = System.getenv("PORT");
-        if (port == null) {
-            port = "8080"; // Порт по умолчанию для локальной разработки
-        }
         SpringApplication.run(GoodTripBackendApplication.class, args);
-        System.out.println("Application is running on port: " + port);
     }
 
     @Bean
