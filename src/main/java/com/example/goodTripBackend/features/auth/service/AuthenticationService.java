@@ -41,7 +41,7 @@ public class AuthenticationService {
     private String activationUrl;
 
     @Transactional
-    public void register(RegisterRequest request) throws MessagingException {
+    public AuthenticationResponse register(RegisterRequest request) throws MessagingException {
         var userRole = roleService.getRole(Role.USER.name());
         var user = User.builder()
                 .name(request.getName())
@@ -54,10 +54,10 @@ public class AuthenticationService {
                 .roles(List.of(userRole))
                 .build();
         userRepository.save(user);
-        sendValidationEmail(user);
+        //sendValidationEmail(user);
         var jwtToken = jwtService.generateToken(user);
         var jwtRefreshToken = jwtService.generateToken(user);
-        AuthenticationResponse
+        return AuthenticationResponse
                 .builder()
                 .token(jwtToken)
                 .refreshToken(jwtRefreshToken)

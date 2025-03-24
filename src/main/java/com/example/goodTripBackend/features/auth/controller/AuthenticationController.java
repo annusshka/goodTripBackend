@@ -26,8 +26,8 @@ public class AuthenticationController {
             @RequestBody @Valid RegisterRequest request
     ) {
         try {
-            service.register(request);
-            return ResponseEntity.accepted().build();
+            //service.register(request);
+            return ResponseEntity.ok(service.register(request));
         }
         catch (DataIntegrityViolationException e) {
             return ResponseEntity.unprocessableEntity().build();
