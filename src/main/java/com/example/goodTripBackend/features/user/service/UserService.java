@@ -1,16 +1,17 @@
 package com.example.goodTripBackend.features.user.service;
 
-import com.example.goodTripBackend.features.user.models.dto.AccountDto;
+import com.example.goodTripBackend.features.tour.models.dto.AudioExcursionDto;
 import com.example.goodTripBackend.features.tour.models.dto.AudioTourDto;
-import com.example.goodTripBackend.features.tour.models.dto.TourDto;
-import com.example.goodTripBackend.features.tour.models.entities.AudioFile;
-import com.example.goodTripBackend.features.user.models.entities.Role;
+import com.example.goodTripBackend.features.tour.models.entities.AudioExcursion;
 import com.example.goodTripBackend.features.tour.models.entities.Tour;
+import com.example.goodTripBackend.features.tour.models.mapper.MapperAudioExcursion;
+import com.example.goodTripBackend.features.tour.models.mapper.MapperAudioTour;
+import com.example.goodTripBackend.features.tour.repository.AudioExcursionRepository;
+import com.example.goodTripBackend.features.tour.repository.AudioTourRepository;
+import com.example.goodTripBackend.features.user.models.dto.AccountDto;
+import com.example.goodTripBackend.features.user.models.entities.Role;
 import com.example.goodTripBackend.features.user.models.entities.User;
-import com.example.goodTripBackend.features.tour.models.mapper.MapperTour;
 import com.example.goodTripBackend.features.user.models.mapper.MapperUser;
-import com.example.goodTripBackend.features.tour.repository.AudioFileRepository;
-import com.example.goodTripBackend.features.tour.repository.TourRepository;
 import com.example.goodTripBackend.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -18,86 +19,129 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository repository;
+    private final UserRepository userRepository;
 
-    private final TourRepository tourRepository;
+    private final AudioTourRepository audioTourRepository;
 
-    private final AudioFileRepository audioFileRepository;
+    private final AudioExcursionRepository audioExcursionRepository;
 
-    private final MapperTour mapperTour;
+    private final MapperAudioTour mapperAudioTour;
 
     private final MapperUser mapperUser;
 
-    public void addLike(Long userId, Long likedTourId) {
-        User user = repository.findById(userId).orElseThrow();
-        Tour tour = tourRepository.findById(likedTourId).orElseThrow();
-        List<Tour> likes = user.getLikes();
-        if (likes.contains(tour)) {
-            likes.remove(tour);
-        } else {
-            likes.add(tour);
-        }
-        repository.save(user);
+    private final MapperAudioExcursion mapperAudioExcursion;
+
+    public User findById(Long id) throws Exception {
+        return userRepository.findById(id).orElseThrow();
     }
 
-    public void addTour(Long userId, Long newTourId) {
-        User user = repository.findById(userId).orElseThrow();
-        Tour tour = tourRepository.findById(newTourId).orElseThrow();
-        user.getCreatedTours().add(tour);
-        repository.save(user);
-    }
-
-    public User findById(Long id) {
-        return repository.findById(id).orElse(null);
-    }
-
-    public User findByEmail(String email) {
-        return repository.findByEmail(email).orElse(null);
-    }
-
-    public List<TourDto> findLikesByUserId(Long id) {
-        Optional<User> user = repository.findById(id);
-        List<TourDto> tourDtoList = new ArrayList<>();
-        if (user.isPresent()) {
-            List<Tour> tours = user.get().getLikes();
-            for (Tour tour : tours) {
-                tourDtoList.add(mapperTour.mapToTourDto(tour, true));
+    public void addTourLike(Long userId, Long likedTourId, boolean isLiked) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow();
+        Tour tour = audioTourRepository.findById(likedTourId).orElseThrow();
+        List<Tour> likes = user.getLikedTours();
+        if (isLiked) {
+            if (!likes.contains(tour)) {
+                likes.add(tour);
             }
+        } else {
+            likes.remove(tour);
+        }
+        user.setLikedTours(likes);
+        userRepository.save(user);
+    }
+
+    public void addAudioExcursionLike(Long userId, Long likedAudioExcursionId, boolean isLiked) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow();
+        AudioExcursion audioExcursion = audioExcursionRepository.findById(likedAudioExcursionId).orElseThrow();
+        List<AudioExcursion> likes = user.getLikedAudioExcursions();
+        if (isLiked) {
+            if (!likes.contains(audioExcursion)) {
+                likes.add(audioExcursion);
+            }
+        } else {
+            likes.remove(audioExcursion);
+        }
+        user.setLikedAudioExcursions(likes);
+        userRepository.save(user);
+    }
+
+    public List<AudioTourDto> findTourLikesByUserId(Long id) throws Exception {
+        User user = userRepository.findById(id).orElseThrow();
+        List<AudioTourDto> tourDtoList = new ArrayList<>();
+        List<Tour> tours = user.getLikedTours();
+        for (Tour tour : tours) {
+            tourDtoList.add(mapperAudioTour.mapToAudioTourDto(tour, true));
         }
         return tourDtoList;
     }
 
-    public List<AudioTourDto> findCreatedToursByUserId(Long id) {
-        Optional<User> user = repository.findById(id);
-        List<AudioTourDto> audioTours = null;
-        if (user.isPresent()) {
-            List<Tour> tours = user.get().getCreatedTours();
-            for (Tour tour : tours) {
-                AudioFile audioFile = audioFileRepository.findByTour(tour).orElseThrow();
-            }
+    public List<AudioExcursionDto> findAudioExcursionLikesByUserId(Long id) throws Exception {
+        User user = userRepository.findById(id).orElseThrow();
+        List<AudioExcursionDto> audioExcursionDtoList = new ArrayList<>();
+        List<AudioExcursion> audioExcursionList = user.getLikedAudioExcursions();
+        for (AudioExcursion audioExcursion : audioExcursionList) {
+            audioExcursionDtoList.add(mapperAudioExcursion.mapToAudioExcursionDto(audioExcursion, true));
+        }
+        return audioExcursionDtoList;
+    }
+
+    public List<AudioTourDto> findCreatedTours(Long userId) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow();
+        List<AudioTourDto> audioTours = new ArrayList<>();
+        List<Tour> createdTourList = user.getCreatedTours();
+        for (Tour tour : createdTourList) {
+            boolean isLiked = createdTourList.contains(tour);
+            audioTours.add(mapperAudioTour.mapToAudioTourDto(tour, isLiked));
         }
         return audioTours;
     }
 
+    public List<AudioExcursionDto> findCreatedAudioExcursions(Long userId) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow();
+        List<AudioExcursionDto> audioExcursionDtos = new ArrayList<>();
+        List<AudioExcursion> createdTourList = user.getCreatedAudioExcursions();
+        List<AudioExcursion> audioExcursionList = user.getLikedAudioExcursions();
+        for (AudioExcursion audioExcursion : createdTourList) {
+            boolean isLiked = audioExcursionList.contains(audioExcursion);
+            audioExcursionDtos.add(mapperAudioExcursion.mapToAudioExcursionDto(audioExcursion, isLiked));
+        }
+        return audioExcursionDtos;
+    }
+
+
     public List<AccountDto> findAll(int offset, int limit) {
-        List<User> users = repository.findAll(PageRequest.of(offset, limit)).getContent();
+        List<User> users = userRepository.findAll(PageRequest.of(offset, limit)).getContent();
         List<AccountDto> accounts = new ArrayList<>();
         for (User user : users) {
             // todo check roles
-            if (user.getRoles().contains(Role.USER)) {
+            boolean isUserRole = user.getRoles().contains(Role.USER);
+            if (isUserRole) {
                 accounts.add(mapperUser.mapToAccountDto(user));
             }
         }
         return accounts;
     }
 
+    public void addExcursion(Long userId, Long newExcursionId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        AudioExcursion audioExcursion = audioExcursionRepository.findById(newExcursionId).orElseThrow();
+        user.getCreatedAudioExcursions().add(audioExcursion);
+        userRepository.save(user);
+    }
+
+    public void addTour(Long userId, Long newTourId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        Tour tour = audioTourRepository.findById(newTourId).orElseThrow();
+        user.getCreatedTours().add(tour);
+        userRepository.save(user);
+    }
+
     public void delete(Long id) {
-        repository.delete(findById(id));
+        userRepository.deleteById(id);
     }
 }

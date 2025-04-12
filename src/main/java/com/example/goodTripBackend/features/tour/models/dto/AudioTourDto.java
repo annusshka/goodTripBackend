@@ -16,7 +16,6 @@ public class AudioTourDto {
 
     private String imagePath;
 
-    //private List<Weekday> weekdays;
     private List<String> weekdays;
 
     private AddressDto address;
@@ -24,8 +23,6 @@ public class AudioTourDto {
     private String description;
 
     private List<String> kinds;
-
-    private String audioPath;
 
     @Builder.Default
     private boolean isLiked = false;

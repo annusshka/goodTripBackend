@@ -1,9 +1,6 @@
 package com.example.goodTripBackend.features.tour.models.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -11,13 +8,15 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TourDto {
+public class AudioExcursionDto {
 
     private Long id;
 
     private String name;
 
     private String imagePath;
+
+    private String audioPath;
 
     private List<String> weekdays;
 
@@ -30,4 +29,3 @@ public class TourDto {
     @Builder.Default
     private boolean isLiked = false;
 }
-

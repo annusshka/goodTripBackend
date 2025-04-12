@@ -26,8 +26,8 @@ public class AuthenticationController {
             @RequestBody @Valid RegisterRequest request
     ) {
         try {
-            service.register(request);
-            return ResponseEntity.accepted().build();
+            var response = service.register(request);
+            return ResponseEntity.accepted().body(response);
         }
         catch (DataIntegrityViolationException e) {
             return ResponseEntity.unprocessableEntity().build();
@@ -43,6 +43,7 @@ public class AuthenticationController {
     public ResponseEntity<AuthenticationResponse> authentication(
             @RequestBody @Valid AuthenticationRequest request
     ) {
-        return ResponseEntity.ok(service.authentication(request));
+        var response = service.authentication(request);
+        return ResponseEntity.accepted().body(response);
     }
 }

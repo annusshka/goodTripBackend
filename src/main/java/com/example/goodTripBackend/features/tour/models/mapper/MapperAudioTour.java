@@ -1,7 +1,6 @@
 package com.example.goodTripBackend.features.tour.models.mapper;
 
 import com.example.goodTripBackend.features.tour.models.dto.AudioTourDto;
-import com.example.goodTripBackend.features.tour.models.entities.AudioFile;
 import com.example.goodTripBackend.features.tour.models.entities.Tour;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,27 +16,16 @@ public class MapperAudioTour {
                 .id(tour.getId())
                 .name(tour.getName())
                 .kinds(mapperUtils.mapToStringKinds(tour.getKinds()))
+                .weekdays(mapperUtils.mapToWeekdayDtos(tour.getWeekdays()))
                 .address(mapperUtils.mapToAddressDto(tour.getAddress()))
                 .imagePath(tour.getImagePath())
                 .description(tour.getDescription())
                 .build();
     }
 
-    public AudioTourDto mapToAudioTourDto(Tour tour, AudioFile audioFile) {
+    public AudioTourDto mapToAudioTourDto(Tour tour, boolean isLiked) {
         var audioTourDto = mapToAudioTourDto(tour);
-        audioTourDto.setAudioPath(audioFile.getAudioPath());
-        return audioTourDto;
-    }
-
-    public AudioTourDto mapToAudioTourDto(Tour tour, AudioFile audioFile, boolean isLiked) {
-        var audioTourDto = mapToAudioTourDto(tour, audioFile);
         audioTourDto.setLiked(isLiked);
-        return audioTourDto;
-    }
-
-    public AudioTourDto mapToAudioTourDto(Tour tour, String audioFilePath) {
-        var audioTourDto = mapToAudioTourDto(tour);
-        audioTourDto.setAudioPath(audioFilePath);
         return audioTourDto;
     }
 
