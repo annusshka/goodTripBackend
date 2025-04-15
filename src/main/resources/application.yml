@@ -3,9 +3,10 @@ spring:
     active: dev
   servlet:
     multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
+      max-file-size: 1000MB
+      max-request-size: 1000MB
       enabled: true
+      resolve-lazily: false
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

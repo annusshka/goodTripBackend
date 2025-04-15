@@ -2,8 +2,12 @@ package com.example.goodTripBackend.features.tour.models.mapper;
 
 import com.example.goodTripBackend.features.tour.models.dto.AudioExcursionDto;
 import com.example.goodTripBackend.features.tour.models.entities.AudioExcursion;
+import com.example.goodTripBackend.features.tour.models.entities.Weekday;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -46,5 +50,23 @@ public class MapperAudioExcursion {
                 .audioPath(audioTourDto.getAudioPath())
                 .description(audioTourDto.getDescription())
                 .build();
+    }
+
+    public List<AudioExcursion> mapToAudioExcursions(List<AudioExcursionDto> audioExcursionDtoList) {
+        List<AudioExcursion> audioExcursionList = new ArrayList<>();
+        for (AudioExcursionDto audioExcursionDto : audioExcursionDtoList) {
+            audioExcursionList.add(mapToAudioExcursion(audioExcursionDto));
+        }
+
+        return audioExcursionList;
+    }
+
+    public List<AudioExcursionDto> mapToAudioExcursionDtos(List<AudioExcursion> audioExcursionList) {
+        List<AudioExcursionDto> audioExcursionDtoList = new ArrayList<>();
+        for (AudioExcursion audioExcursion : audioExcursionList) {
+            audioExcursionDtoList.add(mapToAudioExcursionDto(audioExcursion));
+        }
+
+        return audioExcursionDtoList;
     }
 }

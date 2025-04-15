@@ -81,11 +81,11 @@ public class User implements UserDetails, Principal {
     @JsonIgnore
     private List<AudioExcursion> likedAudioExcursions;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Tour> createdTours;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<AudioExcursion> createdAudioExcursions;
 

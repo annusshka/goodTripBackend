@@ -26,4 +26,6 @@ public class AudioTourDto {
 
     @Builder.Default
     private boolean isLiked = false;
+
+    private List<AudioExcursionDto> excursionList;
 }

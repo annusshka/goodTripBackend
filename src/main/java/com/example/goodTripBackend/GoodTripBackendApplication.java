@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import io.imagekit.sdk.ImageKit;
 import io.imagekit.sdk.config.Configuration;
 import io.imagekit.sdk.utils.Utils;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -17,6 +18,7 @@ import java.io.IOException;
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableAsync
+@EnableConfigurationProperties
 public class GoodTripBackendApplication {
 
     public static void main(String[] args) {
