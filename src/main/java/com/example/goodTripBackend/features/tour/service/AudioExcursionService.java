@@ -63,10 +63,13 @@ public class AudioExcursionService {
 //    }
 
     public Long save(AudioExcursionDto audioExcursionDto, Long userId) throws Exception {
+        String audioPath = audioExcursionDto.getAudioPath();
+        String imagePath = audioExcursionDto.getImagePath();
+
         var audioExcursion = AudioExcursion.builder()
                 .name(audioExcursionDto.getName())
-                .audioPath(audioExcursionDto.getAudioPath())
-                .imagePath(audioExcursionDto.getImagePath())
+                .audioPath(audioPath)
+                .imagePath(imagePath)
                 .weekdays(mapperUtils.mapToWeekdays(audioExcursionDto.getWeekdays()))
                 .kinds(mapperUtils.mapToTourKinds(audioExcursionDto.getKinds()))
                 .address(mapperUtils.mapToAddress(audioExcursionDto.getAddress()))
@@ -81,10 +84,10 @@ public class AudioExcursionService {
     public Long saveFiles(Long excursionId, MultipartFile image, MultipartFile audio, Long userId) throws Exception {
         AudioExcursion audioExcursion = audioExcursionRepository.findById(excursionId).orElseThrow();
 
-        String savedImage = saveImage(image, String.valueOf(audioExcursion.getId()));
+        String savedImage = saveImage(image, audioExcursion.getId() + "/"+ audioExcursion.getImagePath());
         audioExcursion.setImagePath(savedImage);
 
-        String savedAudio = saveAudio(audio, String.valueOf(audioExcursion.getId()));
+        String savedAudio = saveAudio(audio, audioExcursion.getId() + "/" + audioExcursion.getAudioPath());
         audioExcursion.setAudioPath(savedAudio);
 
         audioExcursionRepository.save(audioExcursion);
@@ -92,8 +95,7 @@ public class AudioExcursionService {
     }
 
     public String saveImage(MultipartFile imageFile, String id) throws IOException {
-        FileCreateRequest fileCreateRequest = new FileCreateRequest(imageFile.getBytes(), IMAGE_BASE_PATH + "/"
-                + id + imageFile.getOriginalFilename());
+        FileCreateRequest fileCreateRequest = new FileCreateRequest(imageFile.getBytes(), IMAGE_BASE_PATH + "/" + id);
         try {
             return ImageKit.getInstance().upload(fileCreateRequest).getName();
         } catch (Exception e) {
@@ -102,8 +104,7 @@ public class AudioExcursionService {
     }
 
     public String saveAudio(MultipartFile audioFile, String id) throws IOException {
-        FileCreateRequest fileCreateRequest = new FileCreateRequest(audioFile.getBytes(), AUDIO_BASE_PATH + "/"
-                + id + audioFile.getOriginalFilename());
+        FileCreateRequest fileCreateRequest = new FileCreateRequest(audioFile.getBytes(), AUDIO_BASE_PATH + "/" + id);
         try {
             return ImageKit.getInstance().upload(fileCreateRequest).getName();
         } catch (Exception e) {
@@ -182,7 +183,7 @@ public class AudioExcursionService {
 //    }
 
     public List<AudioExcursionDto> getAudioExcursionsByCity(String city, Long userId) {
-        List<AudioExcursion> audioExcursionList =  audioExcursionRepository.findByAddressCity(city);
+        List<AudioExcursion> audioExcursionList = audioExcursionRepository.findByAddressCity(city);
         List<AudioExcursionDto> audioExcursionDtos = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow();
         List<AudioExcursion> likedAudioExcursions = user.getLikedAudioExcursions();

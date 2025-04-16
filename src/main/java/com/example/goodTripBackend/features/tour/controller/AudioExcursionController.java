@@ -123,18 +123,24 @@ public class AudioExcursionController {
             Long userId = userDetails.getId();
             return ResponseEntity.ok(audioExcursionService.saveFiles(excursionId, image, audio, userId));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            try {
+                Long userId = userDetails.getId();
+                audioExcursionService.deleteById(userId, excursionId);
+                return ResponseEntity.accepted().build();
+            } catch (Exception ex) {
+                return ResponseEntity.badRequest().build();
+            }
         }
     }
 
     @DeleteMapping
     public ResponseEntity<Void> deleteById(
             @AuthenticationPrincipal User userDetails,
-            @RequestParam("tour_id") Long tourId
+            @RequestParam("excursion_id") Long excursionId
     ) {
         try {
             Long userId = userDetails.getId();
-            audioExcursionService.deleteById(userId, tourId);
+            audioExcursionService.deleteById(userId, excursionId);
             return ResponseEntity.accepted().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();

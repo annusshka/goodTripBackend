@@ -43,7 +43,13 @@ public class AudioTourController {
             Long userId = userDetails.getId();
             return ResponseEntity.ok(audioTourService.saveFiles(tourId, image, userId));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            try {
+                Long userId = userDetails.getId();
+                audioTourService.deleteById(tourId, userId);
+                return ResponseEntity.accepted().build();
+            } catch (Exception ex) {
+                return ResponseEntity.notFound().build();
+            }
         }
     }
 

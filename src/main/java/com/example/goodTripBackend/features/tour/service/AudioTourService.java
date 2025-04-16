@@ -57,6 +57,7 @@ public class AudioTourService {
                 .name(tourDto.getName())
                 .weekdays(mapperUtils.mapToWeekdays(tourDto.getWeekdays()))
                 .kinds(mapperUtils.mapToTourKinds(tourDto.getKinds()))
+                .imagePath(tourDto.getImagePath())
                 .description(tourDto.getDescription())
                 .audioExcursionList(mapperAudioExcursion.mapToAudioExcursions(audioExcursionDtoList))
                 .address(mapperUtils.mapToAddress(firstAudioExcursionDto.getAddress()))
@@ -70,7 +71,7 @@ public class AudioTourService {
     public Long saveFiles(Long tourId, MultipartFile image, Long userId) throws Exception {
         Tour tour = audioTourRepository.findById(tourId).orElseThrow();
 
-        String savedImage = saveImage(image, String.valueOf(tour.getId()));
+        String savedImage = saveImage(image, tour.getId() + "/"+ tour.getImagePath());
         tour.setImagePath(savedImage);
 
         audioTourRepository.save(tour);
@@ -79,7 +80,7 @@ public class AudioTourService {
 
     public String saveImage(MultipartFile imageFile, String id) throws IOException {
         FileCreateRequest fileCreateRequest = new FileCreateRequest(imageFile.getBytes(), IMAGE_BASE_PATH + "/"
-                + id + imageFile.getOriginalFilename());
+                + id);
         try {
             return ImageKit.getInstance().upload(fileCreateRequest).getName();
         } catch (Exception e) {
@@ -124,7 +125,7 @@ public class AudioTourService {
     }
 
     public List<AudioTourDto> getAudioToursByCity(String city, Long userId) {
-        List<Tour> audioExcursionList =  audioTourRepository.findByAddressCity(city);
+        List<Tour> audioExcursionList = audioTourRepository.findByAddressCity(city);
         List<AudioTourDto> audioExcursionDtos = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow();
         List<Tour> likedTours = user.getLikedTours();
