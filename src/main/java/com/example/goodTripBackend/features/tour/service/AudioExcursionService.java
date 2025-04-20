@@ -59,7 +59,7 @@ public class AudioExcursionService {
         return audioExcursion.getId();
     }
 
-    public Long saveImageFile(Long excursionId, MultipartFile image, Long userId) throws Exception {
+    public Long saveImageFile(Long excursionId, MultipartFile image) throws Exception {
         AudioExcursion audioExcursion = audioExcursionRepository.findById(excursionId).orElseThrow();
 
         String savedImage = saveImage(image, audioExcursion.getId() + "/"+ audioExcursion.getImagePath());
@@ -69,7 +69,7 @@ public class AudioExcursionService {
         return audioExcursion.getId();
     }
 
-    public Long saveAudioFile(Long excursionId, MultipartFile audio, Long userId) throws Exception {
+    public Long saveAudioFile(Long excursionId, MultipartFile audio) throws Exception {
         AudioExcursion audioExcursion = audioExcursionRepository.findById(excursionId).orElseThrow();
 
         String savedAudio = saveAudio(audio, audioExcursion.getId() + "/" + audioExcursion.getAudioPath());

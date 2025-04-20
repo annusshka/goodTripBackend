@@ -44,7 +44,7 @@ public class Tour {
             inverseJoinColumns = @JoinColumn(name = "kind_id"))
     private List<TourKind> kinds;
 
-    @ManyToMany(cascade = {CascadeType.MERGE})
+    @ManyToMany
     @JoinTable(
             name = "tour_audio_excursion",
             joinColumns = @JoinColumn(name = "tour_id"),

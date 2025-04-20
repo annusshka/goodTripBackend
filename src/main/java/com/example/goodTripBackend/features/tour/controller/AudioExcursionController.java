@@ -96,15 +96,9 @@ public class AudioExcursionController {
     ) {
         try {
             Long userId = userDetails.getId();
-            return ResponseEntity.ok(audioExcursionService.saveImageFile(excursionId, image, userId));
+            return ResponseEntity.ok(audioExcursionService.saveImageFile(excursionId, image));
         } catch (Exception e) {
-            try {
-                Long userId = userDetails.getId();
-                audioExcursionService.deleteById(userId, excursionId);
-                return ResponseEntity.accepted().build();
-            } catch (Exception ex) {
-                return ResponseEntity.badRequest().build();
-            }
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -116,15 +110,9 @@ public class AudioExcursionController {
     ) {
         try {
             Long userId = userDetails.getId();
-            return ResponseEntity.ok(audioExcursionService.saveAudioFile(excursionId, audio, userId));
+            return ResponseEntity.ok(audioExcursionService.saveAudioFile(excursionId, audio));
         } catch (Exception e) {
-            try {
-                Long userId = userDetails.getId();
-                audioExcursionService.deleteById(userId, excursionId);
-                return ResponseEntity.accepted().build();
-            } catch (Exception ex) {
-                return ResponseEntity.badRequest().build();
-            }
+            return ResponseEntity.badRequest().build();
         }
     }
 

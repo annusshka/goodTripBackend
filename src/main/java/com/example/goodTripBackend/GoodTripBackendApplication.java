@@ -22,6 +22,10 @@ import java.io.IOException;
 public class GoodTripBackendApplication {
 
     public static void main(String[] args) {
+        System.setProperty("okhttp3.connectTimeout", "60000");
+        System.setProperty("okhttp3.readTimeout", "60000");
+        System.setProperty("okhttp3.writeTimeout", "90000");
+
         ImageKit imageKit = ImageKit.getInstance();
         Configuration config;
         try {
