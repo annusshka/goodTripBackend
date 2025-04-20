@@ -1,19 +1,11 @@
 package com.example.goodTripBackend.features.tour.controller;
 
 import com.example.goodTripBackend.features.tour.models.dto.AudioExcursionDto;
-import com.example.goodTripBackend.features.tour.models.dto.AudioTourDto;
-import com.example.goodTripBackend.features.tour.models.entities.AudioExcursion;
 import com.example.goodTripBackend.features.tour.service.AudioExcursionService;
 import com.example.goodTripBackend.features.user.models.entities.User;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -83,22 +75,6 @@ public class AudioExcursionController {
         }
     }
 
-//    @PostMapping(value = "/create/full", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public @ResponseBody ResponseEntity<Long> save(
-//            @AuthenticationPrincipal User userDetails,
-//            @RequestBody AudioExcursionDto audioExcursion,
-//            @RequestPart("image") MultipartFile image,
-//            @RequestPart("audio") MultipartFile audio
-//    ) {
-//        try {
-//            Long userId = userDetails.getId();
-//            Long savedId = audioExcursionService.save(audioExcursion, image, audio, userId);
-//            return ResponseEntity.ok().body(savedId);
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//    }
-
     @PostMapping("/create")
     public @ResponseBody ResponseEntity<Long> save(
             @AuthenticationPrincipal User userDetails,
@@ -112,16 +88,35 @@ public class AudioExcursionController {
         }
     }
 
-    @PostMapping("/create/files")
-    public @ResponseBody ResponseEntity<Long> save(
+    @PostMapping("/create/image")
+    public @ResponseBody ResponseEntity<Long> saveImage(
             @AuthenticationPrincipal User userDetails,
             @RequestParam("excursion_id") Long excursionId,
-            @RequestParam("image") MultipartFile image,
+            @RequestParam("image") MultipartFile image
+    ) {
+        try {
+            Long userId = userDetails.getId();
+            return ResponseEntity.ok(audioExcursionService.saveImageFile(excursionId, image, userId));
+        } catch (Exception e) {
+            try {
+                Long userId = userDetails.getId();
+                audioExcursionService.deleteById(userId, excursionId);
+                return ResponseEntity.accepted().build();
+            } catch (Exception ex) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+    }
+
+    @PostMapping("/create/audio")
+    public @ResponseBody ResponseEntity<Long> saveAudio(
+            @AuthenticationPrincipal User userDetails,
+            @RequestParam("excursion_id") Long excursionId,
             @RequestParam("audio") MultipartFile audio
     ) {
         try {
             Long userId = userDetails.getId();
-            return ResponseEntity.ok(audioExcursionService.saveFiles(excursionId, image, audio, userId));
+            return ResponseEntity.ok(audioExcursionService.saveAudioFile(excursionId, audio, userId));
         } catch (Exception e) {
             try {
                 Long userId = userDetails.getId();

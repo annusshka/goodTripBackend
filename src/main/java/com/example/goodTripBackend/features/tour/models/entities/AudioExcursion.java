@@ -40,7 +40,7 @@ public class AudioExcursion {
     @Column(name = "description")
     private String description;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "audio_excursion_kind",
             joinColumns = @JoinColumn(name = "audio_excursion_id"),

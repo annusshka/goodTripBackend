@@ -4,31 +4,23 @@ import com.example.goodTripBackend.domain.JwtService;
 import com.example.goodTripBackend.features.auth.models.dto.AuthenticationRequest;
 import com.example.goodTripBackend.features.auth.models.dto.AuthenticationResponse;
 import com.example.goodTripBackend.features.auth.models.dto.RegisterRequest;
-import com.example.goodTripBackend.features.auth.models.entities.EmailTemplateName;
 import com.example.goodTripBackend.features.auth.models.entities.Token;
 import com.example.goodTripBackend.features.user.models.entities.Role;
 import com.example.goodTripBackend.features.user.models.entities.User;
 import com.example.goodTripBackend.features.auth.repository.TokenRepository;
 import com.example.goodTripBackend.features.user.repository.UserRepository;
 import com.example.goodTripBackend.features.user.service.RoleService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +56,7 @@ public class AuthenticationService {
         userRepository.save(user);
         //sendValidationEmail(user);
         var jwtToken = jwtService.generateToken(user);
-        var jwtRefreshToken = jwtService.generateToken(user);
+        var jwtRefreshToken = jwtService.generateRefreshToken(user);
         saveToken(jwtToken, user);
         return AuthenticationResponse
                 .builder()
@@ -178,7 +170,7 @@ public class AuthenticationService {
         claims.put("fullName", user.fullName());
 
         var jwtToken = jwtService.generateToken(claims, (User) auth.getPrincipal());
-        var jwtRefreshToken = jwtService.generateToken(user);
+        var jwtRefreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveToken(jwtToken, user);
         return AuthenticationResponse.builder()

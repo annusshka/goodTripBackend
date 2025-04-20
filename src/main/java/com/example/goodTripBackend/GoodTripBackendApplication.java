@@ -26,10 +26,10 @@ public class GoodTripBackendApplication {
         Configuration config;
         try {
             config = Utils.getSystemConfig(GoodTripBackendApplication.class);
+            imageKit.setConfig(config);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        imageKit.setConfig(config);
 
         SpringApplication.run(GoodTripBackendApplication.class, args);
     }

@@ -37,14 +37,14 @@ public class Tour {
     @Column(name = "description")
     private String description;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "tour_kind",
             joinColumns = @JoinColumn(name = "tour_id"),
             inverseJoinColumns = @JoinColumn(name = "kind_id"))
     private List<TourKind> kinds;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.MERGE})
     @JoinTable(
             name = "tour_audio_excursion",
             joinColumns = @JoinColumn(name = "tour_id"),

@@ -2,8 +2,6 @@ package com.example.goodTripBackend.features.tour.service;
 
 import com.example.goodTripBackend.features.tour.models.dto.AudioExcursionDto;
 import com.example.goodTripBackend.features.tour.models.dto.AudioTourDto;
-import com.example.goodTripBackend.features.tour.models.entities.Address;
-import com.example.goodTripBackend.features.tour.models.entities.AudioExcursion;
 import com.example.goodTripBackend.features.tour.models.entities.Tour;
 import com.example.goodTripBackend.features.tour.models.mapper.MapperAudioExcursion;
 import com.example.goodTripBackend.features.tour.models.mapper.MapperAudioTour;
@@ -11,7 +9,6 @@ import com.example.goodTripBackend.features.tour.models.mapper.MapperUtils;
 import com.example.goodTripBackend.features.tour.repository.AddressRepository;
 import com.example.goodTripBackend.features.tour.repository.AudioTourRepository;
 import com.example.goodTripBackend.features.user.models.entities.User;
-import com.example.goodTripBackend.features.user.models.entities.UserRole;
 import com.example.goodTripBackend.features.user.repository.UserRepository;
 import com.example.goodTripBackend.features.user.service.UserService;
 import io.imagekit.sdk.ImageKit;
@@ -147,9 +144,13 @@ public class AudioTourService {
     public void deleteById(Long id, Long userId) throws Exception {
         User user = userRepository.findById(userId).orElseThrow();
         Tour tour = audioTourRepository.findById(id).orElseThrow();
-        boolean isCreatedByUser = user.getCreatedTours().contains(tour);
+
+        List<Tour> audioTourList = user.getCreatedTours();
+        boolean isCreatedByUser = audioTourList.contains(tour);
         if (isCreatedByUser) {
-            audioTourRepository.deleteById(id);
+            audioTourList.remove(tour);
+            user.setCreatedTours(audioTourList);
+            userRepository.save(user);
         } else {
             throw new Exception();
         }
