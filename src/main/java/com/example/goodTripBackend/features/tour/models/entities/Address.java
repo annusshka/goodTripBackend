@@ -1,19 +1,20 @@
 package com.example.goodTripBackend.features.tour.models.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.geo.Point;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "tour_address")
+@Table(name = "address")
 public class Address {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "address_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @Column(name = "country", nullable = false)
@@ -28,8 +29,9 @@ public class Address {
     @Column(name = "house")
     private String house;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @MapsId
-    @JsonIgnore
-    private Tour tour;
+    @Column(name = "lat")
+    private double lat;
+
+    @Column(name = "lon")
+    private double lon;
 }

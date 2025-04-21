@@ -5,12 +5,16 @@ import com.example.goodTripBackend.features.auth.models.dto.AuthenticationRespon
 import com.example.goodTripBackend.features.auth.models.dto.RegisterRequest;
 import com.example.goodTripBackend.features.auth.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("auth")
@@ -26,8 +30,8 @@ public class AuthenticationController {
             @RequestBody @Valid RegisterRequest request
     ) {
         try {
-            service.register(request);
-            return ResponseEntity.accepted().build();
+            var response = service.register(request);
+            return ResponseEntity.accepted().body(response);
         }
         catch (DataIntegrityViolationException e) {
             return ResponseEntity.unprocessableEntity().build();
@@ -43,6 +47,23 @@ public class AuthenticationController {
     public ResponseEntity<AuthenticationResponse> authentication(
             @RequestBody @Valid AuthenticationRequest request
     ) {
-        return ResponseEntity.ok(service.authentication(request));
+        try {
+            var response = service.authentication(request);
+            return ResponseEntity.accepted().body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthenticationResponse> refreshToken(
+            HttpServletRequest request
+    ) {
+        try {
+            var response = service.refreshToken(request);
+            return ResponseEntity.accepted().body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

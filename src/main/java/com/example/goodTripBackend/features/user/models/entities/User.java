@@ -1,5 +1,6 @@
 package com.example.goodTripBackend.features.user.models.entities;
 
+import com.example.goodTripBackend.features.tour.models.entities.AudioExcursion;
 import com.example.goodTripBackend.features.tour.models.entities.Tour;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -49,7 +50,7 @@ public class User implements UserDetails, Principal {
     @Column(name = "password")
     private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -70,11 +71,23 @@ public class User implements UserDetails, Principal {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "tour_id"))
     @JsonIgnore
-    private List<Tour> likes;
+    private List<Tour> likedTours;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "liked_audio_excursion",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "audio_excursion_id"))
+    @JsonIgnore
+    private List<AudioExcursion> likedAudioExcursions;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Tour> createdTours;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<AudioExcursion> createdAudioExcursions;
 
     private boolean accountLocked;
     private boolean enabled;

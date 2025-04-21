@@ -37,6 +37,10 @@ public class JwtService {
         return generateToken(new HashMap<>(), userDetails);
     }
 
+    public String generateRefreshToken(UserDetails userDetails) {
+        return buildToken(new HashMap<>(), userDetails, 950400000);
+    }
+
     public String generateToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails

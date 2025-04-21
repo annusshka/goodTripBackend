@@ -4,8 +4,10 @@ import com.example.goodTripBackend.features.tour.models.entities.Tour;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface TourRepository extends JpaRepository<Tour, Long> {
+import java.util.List;
 
-    // List<Tour> findByCity(String city);
+@Repository
+public interface AudioTourRepository extends JpaRepository<Tour, Long> {
+
+    List<Tour> findByAddressCity(String city);
 }

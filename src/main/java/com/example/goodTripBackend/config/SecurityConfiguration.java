@@ -31,6 +31,10 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry ->
                                 authorizationManagerRequestMatcherRegistry
                                         .requestMatchers(
+                                                "/api/v1/audioexcursions/**",
+                                                "/api/v1/audiotours/**",
+                                                "/api/v1/user/**",
+                                                "/api/v1/admin/**",
                                                 "/auth/**",
                                                 "/v2/api-docs",
                                                 "/v3/api-docs",

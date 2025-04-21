@@ -1,115 +1,83 @@
 package com.example.goodTripBackend.features.tour.service;
 
-import com.example.goodTripBackend.features.user.service.UserService;
+import com.example.goodTripBackend.features.tour.models.dto.AudioExcursionDto;
 import com.example.goodTripBackend.features.tour.models.dto.AudioTourDto;
-import com.example.goodTripBackend.features.tour.models.entities.Address;
-import com.example.goodTripBackend.features.tour.models.entities.AudioFile;
 import com.example.goodTripBackend.features.tour.models.entities.Tour;
-import com.example.goodTripBackend.features.user.models.entities.User;
+import com.example.goodTripBackend.features.tour.models.mapper.MapperAudioExcursion;
 import com.example.goodTripBackend.features.tour.models.mapper.MapperAudioTour;
 import com.example.goodTripBackend.features.tour.models.mapper.MapperUtils;
-import com.example.goodTripBackend.features.tour.repository.AudioFileRepository;
+import com.example.goodTripBackend.features.tour.repository.AddressRepository;
+import com.example.goodTripBackend.features.tour.repository.AudioTourRepository;
+import com.example.goodTripBackend.features.user.models.entities.User;
 import com.example.goodTripBackend.features.user.repository.UserRepository;
+import com.example.goodTripBackend.features.user.service.UserService;
 import io.imagekit.sdk.ImageKit;
 import io.imagekit.sdk.models.FileCreateRequest;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@Transactional
+@RequiredArgsConstructor
 public class AudioTourService {
-
-    private static final String AUDIO_BASE_PATH = "goodTrip/audio";
 
     private static final String IMAGE_BASE_PATH = "goodTrip/photo";
 
-    private final AudioFileRepository audioFileRepository;
+    private final UserRepository userRepository;
 
-    private final UserService userService;
+    private final AudioTourRepository audioTourRepository;
 
-    private final TourService tourService;
+    private final AddressRepository addressRepository;
+
+    private final MapperAudioTour mapperAudioTour;
+
+    private final MapperAudioExcursion mapperAudioExcursion;
 
     private final MapperUtils mapperUtils;
 
-    private final MapperAudioTour mapperAudioTour;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public Long saveTour(AudioTourDto audioTour, Long userId) {
-        Tour tour = Tour.builder()
-                .name(audioTour.getName())
-                .weekdays(mapperUtils.mapToWeekdays(audioTour.getWeekdays()))
-                .description(audioTour.getDescription())
+    public Long save(AudioTourDto tourDto, Long userId) throws Exception {
+        List<AudioExcursionDto> audioExcursionDtoList = tourDto.getExcursionList();
+        AudioExcursionDto firstAudioExcursionDto = audioExcursionDtoList.get(0);
+
+        var tour = Tour.builder()
+                .name(tourDto.getName())
+                .weekdays(mapperUtils.mapToWeekdays(tourDto.getWeekdays()))
+                .kinds(mapperUtils.mapToTourKinds(tourDto.getKinds()))
+                .imagePath(tourDto.getImagePath())
+                .description(tourDto.getDescription())
+                .audioExcursionList(mapperAudioExcursion.mapToAudioExcursions(audioExcursionDtoList))
+                .address(mapperUtils.mapToAddress(firstAudioExcursionDto.getAddress()))
                 .build();
 
-        Address address = mapperUtils.mapToAddress(audioTour.getAddress());
-        address.setTour(tour);
-        tour.setAddress(address);
-        tour.setKinds(mapperUtils.mapToTourKinds(audioTour.getKinds()));
-
-        tourService.save(tour);
-        userService.addTour(userId, tour.getId());
+        audioTourRepository.save(tour);
+        userService.addTour(userId, tour);
         return tour.getId();
     }
 
-    public Long saveFiles(Long tourId, MultipartFile image, MultipartFile audio) throws IOException {
-        Tour tour = tourService.findById(tourId);
-        tour.setImagePath(saveImage(image, String.valueOf(tour.getId())));
-        String audioPath = saveAudio(audio, tourId);
+    public Long saveFiles(Long tourId, MultipartFile image, Long userId) throws Exception {
+        Tour tour = audioTourRepository.findById(tourId).orElseThrow();
 
-        AudioFile audioTour = AudioFile.builder()
-                .audioPath(audioPath)
-                .tour(tour)
-                .build();
-        audioFileRepository.save(audioTour);
-        return tourService.save(tour);
-    }
+        String savedImage = saveImage(image, tour.getId() + "/"+ tour.getImagePath());
+        tour.setImagePath(savedImage);
 
-    public Long saveImageFile(Long tourId, MultipartFile image) throws IOException {
-        Tour tour = tourService.findById(tourId);
-        tour.setImagePath(saveImage(image, String.valueOf(tour.getId())));
-        return tourService.save(tour);
-    }
-
-    public Long saveAudioFile(Long tourId, MultipartFile audio) throws IOException {
-        Tour tour = tourService.findById(tourId);
-        String audioPath = saveAudio(audio, tourId);
-        AudioFile audioTour = AudioFile.builder()
-                .audioPath(audioPath)
-                .tour(tour)
-                .build();
-        audioFileRepository.save(audioTour);
-        return tourService.save(tour);
-    }
-
-    public Long save(AudioTourDto audioTour, MultipartFile image, MultipartFile audio, Long userId) throws IOException {
-        var tour = Tour.builder()
-                .name(audioTour.getName())
-                .weekdays(mapperUtils.mapToWeekdays(audioTour.getWeekdays()))
-                .description(audioTour.getDescription())
-                .build();
-        tour.setImagePath(saveImage(image, String.valueOf(tour.getId())));
-
-        var address = mapperUtils.mapToAddress(audioTour.getAddress());
-        address.setTour(tour);
-
-        tour.setKinds(mapperUtils.mapToTourKinds(audioTour.getKinds()));
-
-        saveAudio(audio, tour.getId());
-        tourService.save(tour);
-        userService.addTour(userId, tour.getId());
+        audioTourRepository.save(tour);
         return tour.getId();
     }
 
     public String saveImage(MultipartFile imageFile, String id) throws IOException {
         FileCreateRequest fileCreateRequest = new FileCreateRequest(imageFile.getBytes(), IMAGE_BASE_PATH + "/"
-                + id + imageFile.getOriginalFilename());
+                + id);
         try {
             return ImageKit.getInstance().upload(fileCreateRequest).getName();
         } catch (Exception e) {
@@ -117,92 +85,78 @@ public class AudioTourService {
         }
     }
 
-    public String saveAudio(MultipartFile audioFile, Long id) throws IOException {
-        FileCreateRequest fileCreateRequest = new FileCreateRequest(audioFile.getBytes(), AUDIO_BASE_PATH + "/"
-                + id + audioFile.getOriginalFilename());
-        try {
-            return ImageKit.getInstance().upload(fileCreateRequest).getName();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    public void addTourLike(Long userId, Long likedTourId, boolean isLiked) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow();
+        Tour tour = audioTourRepository.findById(likedTourId).orElseThrow();
+        List<Tour> likes = user.getLikedTours();
+        if (isLiked) {
+            if (!likes.contains(tour)) {
+                likes.add(tour);
+            }
+        } else {
+            likes.remove(tour);
         }
+        user.setLikedTours(likes);
+        userRepository.save(user);
     }
 
-    public boolean checkIsLiked(Long userId, Long tourId) {
-        User user = userService.findById(userId);
-        Tour tour = tourService.findById(tourId);
-        return user.getLikes().contains(tour);
+    public List<AudioTourDto> findTourLikesByUserId(Long id) throws Exception {
+        User user = userRepository.findById(id).orElseThrow();
+        List<AudioTourDto> tourDtoList = new ArrayList<>();
+        List<Tour> tours = user.getLikedTours();
+        for (Tour tour : tours) {
+            tourDtoList.add(mapperAudioTour.mapToAudioTourDto(tour, true));
+        }
+        return tourDtoList;
     }
 
-    public AudioTourDto findById(Long userId, Long id) {
-        Tour tour = tourService.findById(id);
-        AudioFile audioFile = audioFileRepository.findByTour(tour).orElseThrow();
-        boolean isLiked = checkIsLiked(userId, id);
-
-        return mapperAudioTour.mapToAudioTourDto(tour, audioFile, isLiked);
+    public List<AudioTourDto> findCreatedTours(Long userId) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow();
+        List<AudioTourDto> audioTours = new ArrayList<>();
+        List<Tour> createdTourList = user.getCreatedTours();
+        for (Tour tour : createdTourList) {
+            boolean isLiked = createdTourList.contains(tour);
+            audioTours.add(mapperAudioTour.mapToAudioTourDto(tour, isLiked));
+        }
+        return audioTours;
     }
 
-    public List<AudioFile> findAllAudioFiles(int offset, int limit) {
-        return audioFileRepository.findAll(PageRequest.of(offset, limit)).getContent();
+    public List<AudioTourDto> getAudioToursByCity(String city, Long userId) {
+        List<Tour> audioExcursionList = audioTourRepository.findByAddressCity(city);
+        List<AudioTourDto> audioExcursionDtos = new ArrayList<>();
+        User user = userRepository.findById(userId).orElseThrow();
+        List<Tour> likedTours = user.getLikedTours();
+        for (Tour audioExcursion : audioExcursionList) {
+            boolean isLiked = likedTours.contains(audioExcursion);
+            audioExcursionDtos.add(mapperAudioTour.mapToAudioTourDto(audioExcursion, isLiked));
+        }
+        return audioExcursionDtos;
     }
 
     public List<AudioTourDto> findAll(int offset, int limit) {
-        List<AudioFile> audioFiles = findAllAudioFiles(offset, limit);
-        List<AudioTourDto> audioTours = new ArrayList<>();
-        for (AudioFile audioFile : audioFiles) {
-            Tour tour = tourService.findById(audioFile.getId());
-            AudioTourDto audioTour = mapperAudioTour.mapToAudioTourDto(tour, audioFile);
-            audioTours.add(audioTour);
-        }
-        return audioTours;
+        Page<Tour> audioTourList = audioTourRepository.findAll(PageRequest.of(offset, limit));
+
+        return audioTourList.stream()
+                .map(mapperAudioTour::mapToAudioTourDto)
+                .collect(Collectors.toList());
     }
 
-    public List<AudioTourDto> findAllByUser(Long userId, int offset, int limit) {
-        User user = userService.findById(userId);
-        List<Tour> tours = user.getCreatedTours();
-        List<AudioTourDto> audioTours = new ArrayList<>();
-        for (Tour tour : tours) {
-            AudioFile audioFile = audioFileRepository.findByTour(tour).orElseThrow();
-            boolean isLiked = checkIsLiked(userId, tour.getId());
-            AudioTourDto audioTour = mapperAudioTour.mapToAudioTourDto(tour, audioFile, isLiked);
-            audioTours.add(audioTour);
+    public void deleteById(Long id, Long userId) throws Exception {
+        User user = userRepository.findById(userId).orElseThrow();
+        Tour tour = audioTourRepository.findById(id).orElseThrow();
+
+        List<Tour> audioTourList = user.getCreatedTours();
+        boolean isCreatedByUser = audioTourList.contains(tour);
+        if (isCreatedByUser) {
+            audioTourList.remove(tour);
+            user.setCreatedTours(audioTourList);
+            userRepository.save(user);
+        } else {
+            throw new Exception();
         }
-//        List<AudioFile> audioFiles = findAllAudioFiles(offset, limit);
-//        List<AudioTourDto> audioTours = new ArrayList<>();
-//        for (AudioFile audioFile : audioFiles) {
-//            Tour tour = tourService.findById(audioFile.getId());
-//            boolean isLiked = checkIsLiked(userId, tour.getId());
-//            AudioTourDto audioTour = mapperAudioTour.mapToAudioTourDto(tour, audioFile, isLiked);
-//            audioTours.add(audioTour);
-//        }
-        return audioTours;
     }
 
-    public List<AudioTourDto> findAllByCity(String city, Long userId, int offset, int limit) {
-        List<AudioTourDto> audioTours = new ArrayList<>();
-        List<Tour> tours = tourService.findAllByCity(city, offset, limit);
-        for (Tour tour : tours) {
-            Optional<AudioFile> audioFile = audioFileRepository.findById(tour.getId());
-            boolean isLiked = checkIsLiked(userId, tour.getId());
-            audioFile.ifPresent(file -> audioTours.add(mapperAudioTour.mapToAudioTourDto(tour, file, isLiked)));
-        }
-        return audioTours;
-    }
-
-    public void deleteById(Long userId, Long id) {
-        User user = userService.findById(userId);
-        List<Tour> tours = user.getCreatedTours();
-        for (Tour tour : tours) {
-            if (tour.getId().equals(id)) {
-                AudioFile audioFile = audioFileRepository.findByTour(tour).orElseThrow();
-                audioFileRepository.delete(audioFile);
-                tourService.delete(tour.getId());
-                user.getCreatedTours().remove(tour);
-                userRepository.save(user);
-            }
-        }
-//        Tour tour = tourService.findById(id);
-//        AudioFile audioFile = audioFileRepository.findByTour(tour).orElseThrow();
-//        audioFileRepository.delete(audioFile);
-//        tourService.delete(tour.getId());
+    public void deleteByAdmin(Long id) {
+        audioTourRepository.deleteById(id);
     }
 }

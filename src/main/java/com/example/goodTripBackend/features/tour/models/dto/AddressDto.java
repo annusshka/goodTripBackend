@@ -18,4 +18,8 @@ public class AddressDto {
     private String street;
 
     private String house;
+
+    private double lat;
+
+    private double lon;
 }

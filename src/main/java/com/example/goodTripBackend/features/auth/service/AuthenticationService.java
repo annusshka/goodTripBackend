@@ -4,7 +4,6 @@ import com.example.goodTripBackend.domain.JwtService;
 import com.example.goodTripBackend.features.auth.models.dto.AuthenticationRequest;
 import com.example.goodTripBackend.features.auth.models.dto.AuthenticationResponse;
 import com.example.goodTripBackend.features.auth.models.dto.RegisterRequest;
-import com.example.goodTripBackend.features.auth.models.entities.EmailTemplateName;
 import com.example.goodTripBackend.features.auth.models.entities.Token;
 import com.example.goodTripBackend.features.user.models.entities.Role;
 import com.example.goodTripBackend.features.user.models.entities.User;
@@ -12,15 +11,16 @@ import com.example.goodTripBackend.features.auth.repository.TokenRepository;
 import com.example.goodTripBackend.features.user.repository.UserRepository;
 import com.example.goodTripBackend.features.user.service.RoleService;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +41,7 @@ public class AuthenticationService {
     private String activationUrl;
 
     @Transactional
-    public void register(RegisterRequest request) throws MessagingException {
+    public AuthenticationResponse register(RegisterRequest request) throws MessagingException {
         var userRole = roleService.getRole(Role.USER.name());
         var user = User.builder()
                 .name(request.getName())
@@ -54,10 +54,11 @@ public class AuthenticationService {
                 .roles(List.of(userRole))
                 .build();
         userRepository.save(user);
-        sendValidationEmail(user);
+        //sendValidationEmail(user);
         var jwtToken = jwtService.generateToken(user);
-        var jwtRefreshToken = jwtService.generateToken(user);
-        AuthenticationResponse
+        var jwtRefreshToken = jwtService.generateRefreshToken(user);
+        saveToken(jwtToken, user);
+        return AuthenticationResponse
                 .builder()
                 .token(jwtToken)
                 .refreshToken(jwtRefreshToken)
@@ -65,42 +66,66 @@ public class AuthenticationService {
                 .build();
     }
 
-    private void sendValidationEmail(User user) throws MessagingException {
-        var newToken = generateAndSaveActivationToken(user);
-
-        emailService.sendEmail(
-                user.getEmail(),
-                user.fullName(),
-                EmailTemplateName.ACTIVATE_ACCOUNT,
-                activationUrl,
-                newToken,
-                "Account activation"
-        );
-    }
-
-    private String generateAndSaveActivationToken(User user) {
+    private void saveToken(String generatedToken, User user) {
         // generate a token
-        String generatedToken = generateActivationCode(6);
         var token = Token.builder()
                 .token(generatedToken)
                 .createdAt(LocalDateTime.now())
                 .expiresAt(LocalDateTime.now().plusMinutes(30))
                 .user(user)
+                .revoked(false)
                 .build();
         tokenRepository.save(token);
-        return generatedToken;
     }
 
-    private String generateActivationCode(final int length) {
-        String characters = "0123456789";
-        StringBuilder codeBuilder = new StringBuilder();
-        SecureRandom random = new SecureRandom();
-        for (int i = 0; i < length; i++) {
-            int randomChar = random.nextInt(characters.length());
-            codeBuilder.append(characters.charAt(randomChar));
-        }
-        return codeBuilder.toString();
+//    private void sendValidationEmail(User user) throws MessagingException {
+//        var newToken = generateAndSaveActivationToken(user);
+//
+//        emailService.sendEmail(
+//                user.getEmail(),
+//                user.fullName(),
+//                EmailTemplateName.ACTIVATE_ACCOUNT,
+//                activationUrl,
+//                newToken.getToken(),
+//                "Account activation"
+//        );
+//    }
+//
+//    private Token generateAndSaveActivationToken(User user) {
+//        // generate a token
+//        String generatedToken = generateActivationCode(6);
+//        var token = Token.builder()
+//                .token(generatedToken)
+//                .createdAt(LocalDateTime.now())
+//                .expiresAt(LocalDateTime.now().plusMinutes(30))
+//                .user(user)
+//                .revoked(false)
+//                .build();
+//        tokenRepository.save(token);
+//        return token;
+//    }
+
+    private void revokeAllUserTokens(User user) {
+        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
+        if (validUserTokens.isEmpty())
+            return;
+        validUserTokens.forEach(token -> {
+            token.setRevoked(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
+
+//
+//    private String generateActivationCode(final int length) {
+//        String characters = "0123456789";
+//        StringBuilder codeBuilder = new StringBuilder();
+//        SecureRandom random = new SecureRandom();
+//        for (int i = 0; i < length; i++) {
+//            int randomChar = random.nextInt(characters.length());
+//            codeBuilder.append(characters.charAt(randomChar));
+//        }
+//        return codeBuilder.toString();
+//    }
 
     public AuthenticationResponse authentication(AuthenticationRequest request) {
 //        try {
@@ -145,11 +170,40 @@ public class AuthenticationService {
         claims.put("fullName", user.fullName());
 
         var jwtToken = jwtService.generateToken(claims, (User) auth.getPrincipal());
-        var jwtRefreshToken = jwtService.generateToken(user);
+        var jwtRefreshToken = jwtService.generateRefreshToken(user);
+        revokeAllUserTokens(user);
+        saveToken(jwtToken, user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .refreshToken(jwtRefreshToken)
                 .user(user)
                 .build();
+    }
+
+    public AuthenticationResponse refreshToken(HttpServletRequest request) throws Exception {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        final String refreshToken;
+        final String userEmail;
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new Exception();
+        }
+        refreshToken = authHeader.substring(7);
+        userEmail = jwtService.extractUserEmail(refreshToken);
+        if (userEmail != null) {
+            var user = this.userRepository.findByEmail(userEmail).orElseThrow();
+            if (jwtService.isTokenValid(refreshToken, user)) {
+                var jwtToken = jwtService.generateToken(user);
+                var jwtRefreshToken = jwtService.generateToken(user);
+                revokeAllUserTokens(user);
+                saveToken(jwtToken, user);
+                return AuthenticationResponse.builder()
+                        .token(jwtToken)
+                        .refreshToken(jwtRefreshToken)
+                        .user(user)
+                        .build();
+            }
+        }
+
+        throw new Exception();
     }
 }

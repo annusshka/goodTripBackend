@@ -14,8 +14,8 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
                         name = "Ann Telegina",
                         email = "telegina.ann2003@yandex.ru"
                 ),
-                description = "OpenApiDocumentation for Mobile App \"GoodTrip\"",
-                title = "GoodTrip",
+                description = "OpenApiDocumentation for Mobile App \"UnknownPlace\"",
+                title = "UnknownPlace",
                 version = "1.0.0",
                 license = @License()
         )

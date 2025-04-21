@@ -42,33 +42,44 @@ public class MapperUtils {
                 .city(address.getCity())
                 .street(address.getStreet())
                 .house(address.getHouse())
+                .lat(address.getLat())
+                .lon(address.getLon())
                 .build();
     }
 
     public Address mapToAddress(AddressDto addressDto) {
+        String country = addressDto.getCountry();
+        String city = addressDto.getCity();
+        String street = addressDto.getStreet();
+        String house = addressDto.getHouse();
+        double lat = addressDto.getLat();
+        double lon = addressDto.getLon();
+
         return Address.builder()
-                .country(addressDto.getCountry())
-                .city(addressDto.getCity())
-                .street(addressDto.getStreet().isEmpty() ? null : addressDto.getStreet())
-                .house(addressDto.getHouse().isEmpty() ? null : addressDto.getHouse())
+                .country(country)
+                .city(city)
+                .street(street == null || street.isEmpty() ? null : street)
+                .house(house == null || house.isEmpty() ? null : house)
+                .lat(lat)
+                .lon(lon)
                 .build();
     }
 
     public List<Weekday> mapToWeekdays(List<String> weekdayStringList) {
         List<Weekday> weekdays = new ArrayList<>();
         for (String day : weekdayStringList) {
-            weekdays.add(Weekday.valueOf(day));
+            weekdays.add(Weekday.valueOf(day.toUpperCase()));
         }
 
         return weekdays;
     }
 
-    public List<String> mapToWeekdayStringList(List<Weekday> weekdays) {
-        List<String> weekdayStringList = new ArrayList<>();
+    public List<String> mapToWeekdayDtos(List<Weekday> weekdays) {
+        List<String> weekdayDtos = new ArrayList<>();
         for (Weekday weekday : weekdays) {
-            weekdayStringList.add(weekday.name());
+            weekdayDtos.add(weekday.name().toLowerCase());
         }
 
-        return weekdayStringList;
+        return weekdayDtos;
     }
 }
